@@ -14,6 +14,13 @@ final class PromiseImpl<T> implements Promise<T> {
   private final Logger log = Logger.getLogger(PromiseImpl.class.getName());
 
   public PromiseImpl(Cue cue, EventSink eventSink, ResolvedState<T> state) {
+    if (cue == null) {
+      throw new NullPointerException("cue");
+    } else if (eventSink == null) {
+      throw new NullPointerException("eventSink");
+    } else if (state == null) {
+      throw new NullPointerException("state");
+    }
     this.cue = cue;
     this.eventSink = eventSink;
     this.state = state;
@@ -21,6 +28,10 @@ final class PromiseImpl<T> implements Promise<T> {
 
   @Override
   public <O> Promise<O> then(Callback<T, O> callback) {
+    if (callback == null) {
+      throw new NullPointerException("callback");
+    }
+
     Deferred<O> deferred = cue.defer();
     eventSink.register(state, () -> {
       T tValue;
@@ -46,6 +57,10 @@ final class PromiseImpl<T> implements Promise<T> {
 
   @Override
   public Promise<T> then(NullVoidCallback callback) {
+    if (callback == null) {
+      throw new NullPointerException("callback");
+    }
+
     Deferred<T> deferred = cue.defer();
     eventSink.register(state, () -> {
       T tValue;
@@ -71,6 +86,10 @@ final class PromiseImpl<T> implements Promise<T> {
 
   @Override
   public <O> Promise<O> then(NullCallback<O> callback) {
+    if (callback == null) {
+      throw new NullPointerException("callback");
+    }
+
     Deferred<O> deferred = cue.defer();
     eventSink.register(state, () -> {
       T tValue;
@@ -96,6 +115,10 @@ final class PromiseImpl<T> implements Promise<T> {
 
   @Override
   public Promise<T> then(VoidCallback<T> callback) {
+    if (callback == null) {
+      throw new NullPointerException("callback");
+    }
+
     Deferred<T> deferred = cue.defer();
     eventSink.register(state, () -> {
       T tValue;
@@ -121,6 +144,10 @@ final class PromiseImpl<T> implements Promise<T> {
 
   @Override
   public Promise<T> fail(VoidErrback errback) {
+    if (errback == null) {
+      throw new NullPointerException("errback");
+    }
+
     Deferred<T> deferred = cue.defer();
     eventSink.register(state, () -> {
       try {
@@ -152,6 +179,10 @@ final class PromiseImpl<T> implements Promise<T> {
 
   @Override
   public Promise<T> fail(Errback<T> errback) {
+    if (errback == null) {
+      throw new NullPointerException("errback");
+    }
+
     Deferred<T> deferred = cue.defer();
     eventSink.register(state, () -> {
       try {
@@ -183,6 +214,10 @@ final class PromiseImpl<T> implements Promise<T> {
 
   @Override
   public Promise<T> always(NullVoidCallback callback) {
+    if (callback == null) {
+      throw new NullPointerException("callback");
+    }
+
     Deferred<T> deferred = cue.defer();
     eventSink.register(state, () -> {
       boolean interrupted = false;

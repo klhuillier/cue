@@ -26,11 +26,20 @@ final class EventSinkImpl implements EventSink {
 
   @Inject
   public EventSinkImpl(@CueExecutors ExecutorService executorService) {
+    if (executorService == null) {
+      throw new NullPointerException("executorService");
+    }
     this.executorService = executorService;
   }
 
   @Override
   public void register(ResolvedState<?> state, Runnable invoker) {
+    if (state == null) {
+      throw new NullPointerException("state");
+    } else if (invoker == null) {
+      throw new NullPointerException("invoker");
+    }
+
     synchronized (lock) {
       if (resolved.containsKey(state)) {
         ready.add(invoker);
@@ -48,6 +57,10 @@ final class EventSinkImpl implements EventSink {
 
   @Override
   public void stateResolved(ResolvedState<?> state) {
+    if (state == null) {
+      throw new NullPointerException("state");
+    }
+
     synchronized (lock) {
       ArrayList<Runnable> waiting = invokers.remove(state);
       if (waiting != null) {

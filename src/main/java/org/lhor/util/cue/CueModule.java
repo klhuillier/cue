@@ -17,6 +17,9 @@ public final class CueModule extends AbstractModule {
   private final ExecutorService executorService;
 
   public CueModule(ExecutorService executorService) {
+    if (executorService == null) {
+      throw new NullPointerException("executorService");
+    }
     this.executorService = executorService;
   }
 

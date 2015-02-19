@@ -12,6 +12,13 @@ final class DeferredImpl<T> implements Deferred<T> {
 
   // Not auto-injected, the Provider needs to provide the same state to this and the Promise
   public DeferredImpl(EventSink eventSink, ResolvedStateImpl<T> state, Promise<T> promise) {
+    if (eventSink == null) {
+      throw new NullPointerException("eventSink");
+    } else if (state == null) {
+      throw new NullPointerException("state");
+    } else if (promise == null) {
+      throw new NullPointerException("promise");
+    }
     this.eventSink = eventSink;
     this.state = state;
     this.promise = promise;
@@ -25,7 +32,9 @@ final class DeferredImpl<T> implements Deferred<T> {
 
   @Override
   public void resolveFrom(Promise<T> tPromise) {
-    if (promise == tPromise) {
+    if (tPromise == null) {
+      throw new NullPointerException("tPromise");
+    } else if (promise == tPromise) {
       throw new IllegalArgumentException("Cannot resolve a Deferred with its own Promise");
     }
     tPromise.then(this::resolve)
