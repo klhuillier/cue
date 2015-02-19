@@ -1,97 +1,97 @@
 package org.lhor.util.cue;
 
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
+/**
+ * Maintains the fulfilled value or rejected reason of a Promise.
+ * <p>
+ * The resolved state is shared by the Deferred and its Promise. This
+ * interface provides read-only access that the Promise needs, while the
+ * concrete type can expose additional methods to allow the Deferred to
+ * attempt to provide a resolved value (fulfillment or rejection).
+ * </p>
+ * <p>
+ * There are two key requirements for ResolvedState. First, it must be
+ * write-once. That is, once the instance is resolved, its state must be
+ * regarded as immutable. (If it is fulfilled with a mutable Object, that
+ * object can be modified freely.) If the state has a value, that value
+ * cannot be replaced and a rejection reason cannot be provided. If the
+ * state is rejected, the reason cannot be replaced and a fulfillment value
+ * cannot be provided.
+ * </p>
+ * <p>
+ * The second key requirement is that it must be threadsafe because no
+ * fewer than two threads will be interacting with any instance, potentially
+ * at the same time. The producer thread will offer a resolution value
+ * (usually through a Deferred) while the consumer thread will be awaiting
+ * resolution (usually through a Promise). A single Promise can have multiple
+ * callbacks registered, so there could potentially be dozens of threads
+ * waiting on a resolution.
+ * </p>
+ * <p>
+ * An instance is "resolved" when if was either fulfilled or rejected. An
+ * instance may be resolved with a value of null, but it must be given an
+ * Exception if it is rejected.
+ * </p>
+ *
+ * @param <T>
+ */
+interface ResolvedState<T> {
+  /**
+   * @return true if the state was fulfilled or rejected
+   */
+  boolean isResolved();
 
+  /**
+   * @return true if the state was fulfilled
+   */
+  boolean isFulfilled();
 
-final class ResolvedState<T> {
-  // For parking and waiting for a value to be resolved. Any other field would also work,
-  // but some tools flag this because they are java.util.concurrent.* types which normally
-  // do not require synchronization.
-  private final Object lock = new Object();
-  private final AtomicBoolean resolved = new AtomicBoolean(false);
-  private final AtomicReference<T> value = new AtomicReference<>(null);
-  private final AtomicReference<RejectedException> reason = new AtomicReference<>(null);
+  /**
+   * @return true if the state was rejected and there is a reason
+   */
+  boolean isRejected();
 
-  public ResolvedState() {
-  }
+  /**
+   * When the state is resolved, the value is returned if the state
+   * is fulfilled or the rejection reason is rethrown.
+   * <p>
+   * This method will block the current thread until the state is resolved.
+   * </p>
+   * <p>
+   * If state was rejected with a null exception, a new RejectedException
+   * will be thrown with no wrapped reason.
+   * </p>
+   *
+   * @return fulfillment value
+   * @throws Exception rejection reason
+   */
+  T get() throws Exception;
 
-  public ResolvedState(T t) {
-    value.set(t);
-    resolved.set(true);
-  }
+  /**
+   * When the state is resolved, the value is returned if the state is
+   * fulfilled, otherwise null is returned.
+   * <p>
+   * This method will block the current thread until the state is resolved.
+   * </p>
+   * <p>
+   * Because it is possible to fulfill a Promise with null for the value,
+   * and because this will return null in the case of a rejection, it is
+   * important to test {@link ResolvedState#isFulfilled()} if relying on
+   * this method, otherwise it is safer to use {@link ResolvedState#get()}.
+   * </p>
+   *
+   * @return the fulfillment value or null
+   */
+  T getValue() throws InterruptedException;
 
-  public ResolvedState(Exception ex) {
-    reason.set(RejectedException.wrap(ex));
-    resolved.set(true);
-  }
-
-  protected boolean isResolved() {
-    synchronized (lock) {
-      return resolved.get();
-    }
-  }
-
-  protected boolean isFulfilled() {
-    synchronized (lock) {
-      // We actually have to test reason because a Promise can be resolved with a null value.
-      // reason is always wrapped in a RejectedException so it cannot be null if rejected.
-      return isResolved() && reason.get() == null;
-    }
-  }
-
-  protected boolean isRejected() {
-    synchronized (lock) {
-      return reason.get() != null;
-    }
-  }
-
-  protected void offerFulfillment(T t) {
-    synchronized (lock) {
-      if (resolved.compareAndSet(false, true) && value.compareAndSet(null, t)) {
-        lock.notifyAll();
-      }
-    }
-  }
-
-  protected void offerRejection(Exception ex) {
-    synchronized (lock) {
-      if (resolved.compareAndSet(false, true) && reason.compareAndSet(null, RejectedException.wrap(ex))) {
-        lock.notifyAll();
-      }
-    }
-  }
-
-  protected void parkUntilResolved() {
-    synchronized (lock) {
-      while (!isResolved()) {
-        try {
-          lock.wait();
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-          throw new RuntimeException(e);
-        }
-      }
-    }
-  }
-
-  protected T get() throws RejectedException {
-    parkUntilResolved();
-    T result = value.get();
-    if (result != null) {
-      return result;
-    }
-    throw reason.get();
-  }
-
-  protected T getValue() {
-    parkUntilResolved();
-    return value.get();
-  }
-
-  protected RejectedException getReason() {
-    parkUntilResolved();
-    return reason.get();
-  }
+  /**
+   * When the state is resolved, the rejection reason is returned if the
+   * state is rejected (possibly with null), otherwise null is returned.
+   * <p>
+   * This method will block the current thread until the state is resolved.
+   * </p>
+   *
+   * @return the rejection reason or null
+   */
+  Exception getReason() throws InterruptedException;
 }

@@ -6,12 +6,21 @@ import net.jcip.annotations.Immutable;
 
 @Immutable
 final class DeferredImpl<T> implements Deferred<T> {
-  private final ResolvedState<T> state = new ResolvedState<>();
-  private final PromiseImpl<T> promise = new PromiseImpl<>(state);
+  private final EventSink eventSink;
+  private final ResolvedStateImpl<T> state;
+  private final Promise<T> promise;
+
+  // Not auto-injected, the Provider needs to provide the same state to this and the Promise
+  public DeferredImpl(EventSink eventSink, ResolvedStateImpl<T> state, Promise<T> promise) {
+    this.eventSink = eventSink;
+    this.state = state;
+    this.promise = promise;
+  }
 
   @Override
   public void resolve(T t) {
     state.offerFulfillment(t);
+    eventSink.stateResolved(state);
   }
 
   @Override
@@ -19,7 +28,8 @@ final class DeferredImpl<T> implements Deferred<T> {
     if (promise == tPromise) {
       throw new IllegalArgumentException("Cannot resolve a Deferred with its own Promise");
     }
-    resolve(tPromise.done());
+    tPromise.then(this::resolve)
+            .fail((VoidErrback) this::reject);
   }
 
   @Override
@@ -30,6 +40,7 @@ final class DeferredImpl<T> implements Deferred<T> {
   @Override
   public void reject(Exception e) {
     state.offerRejection(e);
+    eventSink.stateResolved(state);
   }
 
   @Override

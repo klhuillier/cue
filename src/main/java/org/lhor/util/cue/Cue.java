@@ -10,7 +10,7 @@ import java.util.concurrent.Future;
  * specification in Java, and inspired by (and named for)
  * <a href="https://github.com/kriskowal/q/wiki/API-Reference">the Q library</a>.
  * <p>
- * This attempts to be a fairly faithful reproduction of the Javascript Promise/A+
+ * This attempts to be a fairly accurate implementation of the Javascript Promise/A+
  * specification, which facilitates asynchronous work that rejoins when the work is
  * completed. Obviously, not all features can be reproduced or even should be, since
  * there are many differences between the languages.
@@ -18,13 +18,16 @@ import java.util.concurrent.Future;
  * <p>
  * Unlike the Javascript version--which due to the language specification does not
  * have any mechanism of dispatching new threads and parking existing threads--this
- * version can dispatch work in a separate thread pool provided by an
- * ExecutorService.
+ * version executes callbacks in a separate thread pool provided by an
+ * ExecutorService. To allow for Exceptions to bubble up instead of being silently
+ * caught, it is recommended to end each Promise chain with a call to the blocking
+ * method {@link Promise#done()} which will block the current thread until the
+ * Promise has been resolved and will throw a {@link RejectedException} if the
+ * Promise was rejected.
  * </p>
  * <p>
- * Instances of Cue are normally served up by Google Guice by including
- * {@link CueModule} in your injector's configuration. Without Guice, you can
- * get an instance via {@link Cue#newCue()}.
+ * Instances of Cue are served up by Google Guice by including
+ * {@link CueModule} in your injector's configuration.
  * </p>
  * <p>
  * The main method to use from an instance of Cue is {@link Cue#defer()} which
@@ -32,20 +35,14 @@ import java.util.concurrent.Future;
  * by the invoker. A Deferred can allow one to provide a Promise to consumers
  * while a producer will resolve the Deferred, resolving the Promise.
  * </p>
- * <p>
- * Promises produced can either be blocking or non-blocking. Blocking Promise
- * methods will not return until the Promise is resolved. Non-blocking Promise
- * methods will return immediately and the callbacks will wait to execute until
- * the Promise has been resolved.
- * </p>
  */
 public interface Cue {
   /**
    * Produces a new Deferred instance which can be fulfilled later by a producer
    * while handing off the Promise to any interested consumers at any time.
    *
-   * @param <T>
-   * @return
+   * @param <T> fulfillment type
+   * @return new instance
    */
   <T> Deferred<T> defer();
 
@@ -58,29 +55,13 @@ public interface Cue {
    * finds.
    * </p>
    *
-   * @param promises
-   * @param <T>
-   * @return
+   * @param promises non-null, possibly empty list of promises in any state
+   * @param <T> fulfillment type of all promises
+   * @return new promise resolved based on resolution of all given promises
    */
   <T> Promise<List<T>> all(List<Promise<T>> promises);
 
   /**
-   * Produces a Promise which will only be resolved when all given Promises are
-   * resolved.
-   * <p>
-   * As the returned Promise goes through the array, if it encounters a rejection,
-   * it will also be rejected with the same reason as the first rejection it
-   * finds.
-   * </p>
-   *
-   * @param promise
-   * @param promises
-   * @param <T>
-   * @return
-   */
-  <T> Promise<List<T>> all(Promise<T> promise, Promise<T>... promises);
-
-  /**
    * Produces a Promise which will only be resolved when all given Futures are
    * resolved.
    * <p>
@@ -88,42 +69,27 @@ public interface Cue {
    * rejected with the reason being the first Exception found in the List.
    * </p>
    *
-   * @param futures
-   * @param <T>
-   * @return
+   * @param futures non-null, possibly empty list of futures in any state
+   * @param <T> return type of all futures
+   * @return new promise resolved based on returned values of all given futures
    */
   <T> Promise<List<T>> allFutures(List<Future<T>> futures);
 
   /**
-   * Produces a Promise which will only be resolved when all given Futures are
-   * resolved.
-   * <p>
-   * If any one of the Futures throws an Exception, the returned Promise will be
-   * rejected with the reason being the first Exception found in the List.
-   * </p>
-   *
-   * @param future
-   * @param futures
-   * @param <T>
-   * @return
-   */
-  <T> Promise<List<T>> allFutures(Future<T> future, Future<T>... futures);
-
-  /**
    * Produces a Promise which will be resolved immediately with the provided value.
    *
-   * @param value
-   * @param <T>
-   * @return
+   * @param value fulfillment value
+   * @param <T> fulfillment type
+   * @return new promise fulfilled with the given value
    */
   <T> Promise<T> when(T value);
 
   /**
    * Produces a Promise which will be resolved when the given Future is resolved.
    *
-   * @param future
-   * @param <T>
-   * @return
+   * @param future future to resolve from
+   * @param <T> return type of the future, fulfillment type of the promise
+   * @return a new promise that will be resolved when the future is finished
    */
   <T> Promise<T> whenFuture(Future<T> future);
 
@@ -131,20 +97,9 @@ public interface Cue {
    * Produces a Promise which will be resolved immediately with the provided
    * rejection reason.
    *
-   * @param ex
-   * @param <T>
-   * @return
+   * @param ex possibly null reason for rejection
+   * @param <T> fulfillment type of the promise
+   * @return a new promise rejected with the given reason
    */
   <T> Promise<T> reject(Exception ex);
-
-  /**
-   * Produces a new instance of Cue.
-   * <p>
-   * Instances can be retrieved from this method, but it is recommended to use the
-   * {@link CueModule Guice module}.
-   * </p>
-   *
-   * @return
-   */
-  public static Cue newCue() { return new CueImpl(); }
 }

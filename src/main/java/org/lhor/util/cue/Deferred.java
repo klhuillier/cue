@@ -5,8 +5,6 @@ package org.lhor.util.cue;
  * The producer's interface to the Promises/A+ API.
  * <p>
  * The producer is able to return a Promise of a value at a later time.
- * (Similar to a {@link java.util.concurrent.Future} but without checked
- * exceptions.)
  * </p>
  * <p>
  * Unlike the Promises/A+ API, in Java there can be multiple threads waiting
@@ -15,7 +13,8 @@ package org.lhor.util.cue;
  * {@link #reject()}.
  * </p>
  *
- * @param <T>
+ * @param <T> the value type the Deferred and its immediate Promise will be
+ *            resolved with
  */
 public interface Deferred<T> {
   /**
@@ -23,6 +22,19 @@ public interface Deferred<T> {
    * <p>
    * If the Promise was already resolved or rejected, this will have no
    * effect.
+   * </p>
+   * <p>
+   * It is strongly suggested, but in no way enforced, that the value be
+   * immutable or at least treated as immutable. This is because multiple
+   * callbacks can be registered on the same Promise:
+   * <pre>
+   * // This may print the expected time, epoch, or something entirely
+   * // unexpected (because Calendar is not thread-safe), depending on when
+   * // clear() takes effect:
+   * Promise&lt;Calendar&gt; promise = getTimestamp();
+   * promise.then(time -> time.clear());
+   * promise.then(time -> System.out.println(time));
+   * </pre>
    * </p>
    *
    * @param t nullable, the value to resolve the Promise with
@@ -33,12 +45,28 @@ public interface Deferred<T> {
    * Resolves the Deferred's Promise instance with the same resolution as
    * the given Promise's.
    * <p>
+   * Resolution will occur in separate thread after the given promise has
+   * been resolved.
+   * </p>
+   * <p>
    * The given Promise may be resolved with a null value, but the given
    * Promise itself must not be null.
    * </p>
    * <p>
    * If the given Promise is one produced by this Deferred instance, an
    * {@link IllegalArgumentException} will be thrown.
+   * </p>
+   * <p>
+   * It is possible to create a circular resolution which will never complete
+   * unless a Deferred is resolved in another manner. e.g., the following will
+   * never complete:
+   *  <pre>
+   *  deferred1.resolveFrom(deferred2.promise());
+   *  deferred2.resolveFrom(deferred1.promise());
+   *  </pre>
+   * It is possible to cause both to become resolved by later invoking
+   * <code>deferred1.resolve(value);</code>, in which case the attempt to
+   * resolve from deferred2 will not have any effect.
    * </p>
    *
    * @param tPromise non-null, a Promise instance
@@ -51,7 +79,7 @@ public interface Deferred<T> {
    * Rejects the Deferred's Promise with no underlying reason.
    * <p>
    * The Promise will still throw a {@link RejectedException}, but invoking
-   * {@link Throwable#getCause()} will return null.
+   * {@link RejectedException#getReason()} will return null.
    * </p>
    */
   void reject();
@@ -63,7 +91,7 @@ public interface Deferred<T> {
    * {@link #reject()}.
    * </p>
    *
-   * @param e
+   * @param e an exception or null that is why the promise is to be rejected
    */
   void reject(Exception e);
 
