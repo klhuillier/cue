@@ -15,6 +15,8 @@ Cue is made with as few runtime dependencies as possible. You will need:
 
 Once you have it included in your project, there are two ways to start using it. Both will require you to provide a thread pool, some form of [ExecutorService](http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ExecutorService.html). Using Guice, add `new CueModule(executorService)` to your Injector's list of modules. Without Guice, you can create a new `Provider<Cue>` with `new CueFactory(executorService)` or simply get the instance from `cueFactory.get()`.
 
+Once you have a `Cue` instance, you can begin by invoking `Cue.defer()` to create a `Deferred<T>`. A producer will fulfill or reject this `Deferred<T>`. The consumer will be interested in the `Promise<T>` associated with the `Deferred<T>` which can be retrieved with `deferred.promise()`.
+
 # Producers
 
 Producers are the thread(s) which are generating values for their consumers to work with. The main interface for a producer is Deferred<T> which can be fulfilled with an object of type T. Note that consumer threads will remain in waiting until the Deferred has been resolved (either fulfilled or rejected), so most producers should have a catch block in case there was a problem producing the value: `catch (Exception e) { deferred.reject(e); }`
