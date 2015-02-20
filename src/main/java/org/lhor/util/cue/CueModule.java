@@ -18,11 +18,21 @@ import javax.inject.Singleton;
 
 /**
  * A Guice module for Cue.
+ * <p>
+ * It is recommended the thread pool you provide can expand to provide several
+ * threads and not be an instance of
+ * {@link java.util.concurrent.Executors#newSingleThreadExecutor()}, especially
+ * if using {@link Cue#whenFuture(java.util.concurrent.Future)} to adapt Futures
+ * to Promises.
+ * </p>
  */
 @Immutable
 public final class CueModule extends AbstractModule {
   private final ExecutorService executorService;
 
+  /**
+   * @param executorService not-null thread pool
+   */
   public CueModule(ExecutorService executorService) {
     if (executorService == null) {
       throw new NullPointerException("executorService");

@@ -17,10 +17,10 @@ package org.lhor.util.cue;
  * </p>
  * <pre>
  * List&lt;Record&gt; records = promise
- * .then(user -> lookupRecords(user))
- * .then(resultSet -> convertToList(resultSet))
- * .fail(ex -> log.log(Level.WARNING, "Failed to get user's records", ex))
- * .always(() -> cleanup())
+ * .then(user -&gt; lookupRecords(user))
+ * .then(resultSet -&gt; convertToList(resultSet))
+ * .fail(ex -&gt; log.log(Level.WARNING, "Failed to get user's records", ex))
+ * .always(() -&gt; cleanup())
  * .done();
  * </pre>
  * <p>
@@ -53,7 +53,7 @@ package org.lhor.util.cue;
  * <code>fail</code> is required to use an Errback or VoidErrback.
  * </p>
  * <p>
- * Exceptions thrown by <code>done</code> methods are wrapped in a
+ * Exceptions thrown by <code>done</code> are wrapped in a
  * {@link RejectedException}. The causal exception can be retrieved from
  * {@link Exception#getCause()}. The errbacks will be given the causal exception
  * instead of a RejectedException, unless the original Exception is a
@@ -126,7 +126,8 @@ public interface Promise<T> {
   <O> Promise<O> then(NullCallback<O> callback);
 
   /**
-   * Executes the callback if the promise was fulfilled.
+   * Executes the callback if this Promise was fulfilled, returning a Promise that
+   * will be resolved the same as this Promise, unless an exception is thrown.
    * <p>
    * If the callback returns normally, the Promise returned by this method will
    * be fulfilled with the same value as this Promise was fulfilled with. If the
@@ -145,7 +146,8 @@ public interface Promise<T> {
   Promise<T> then(NullVoidCallback callback);
 
   /**
-   * Executes the errback if the promise was rejected.
+   * Executes the errback if this Promise was rejected, resolving the returned
+   * Promise with a replacement value or a new rejection reason.
    * <p>
    * If this Promise is rejected, the errback will be called with the Exception
    * that caused the rejection. If the errback returns a value, its value will be
@@ -171,7 +173,8 @@ public interface Promise<T> {
   Promise<T> fail(Errback<T> errback);
 
   /**
-   * Executes the errback if the promise was rejected.
+   * Executes the errback if the Promise was rejected, returning a Promise that
+   * will be resolved the same as this Promise unless an exception is thrown.
    * <p>
    * If this Promise is rejected, the errback will be called with the Exception
    * that caused the rejection. If the errback returns normally, the Promise
@@ -191,8 +194,9 @@ public interface Promise<T> {
   Promise<T> fail(VoidErrback errback);
 
   /**
-   * Triggers the callback regardless of whether the promise was fulfilled
-   * or rejected.
+   * Triggers the callback regardless of whether this Promise was fulfilled
+   * or rejected, returning a Promise that will always be resolved the same
+   * way regardless of whether the callback throws an exception.
    * <p>
    * The resolved/rejected status of the returned Promise will be the same as
    * the current promise. The returned Promise will be resolved or rejected

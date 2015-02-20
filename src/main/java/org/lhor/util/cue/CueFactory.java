@@ -16,6 +16,13 @@ import java.util.concurrent.ExecutorService;
 /**
  * A Factory for providing {@link Cue} instances without the use of the
  * Guice and {@link CueModule}.
+ * <p>
+ * It is recommended the thread pool you provide can expand to provide several
+ * threads and not be an instance of
+ * {@link java.util.concurrent.Executors#newSingleThreadExecutor()}, especially
+ * if using {@link Cue#whenFuture(java.util.concurrent.Future)} to adapt Futures
+ * to Promises.
+ * </p>
  */
 @Immutable
 public final class CueFactory implements Provider<Cue> {
@@ -27,6 +34,9 @@ public final class CueFactory implements Provider<Cue> {
   private final CallbackRegistry callbackRegistry;
   private final Cue cue;
 
+  /**
+   * @param executorService not-null thread pool
+   */
   public CueFactory(ExecutorService executorService) {
     if (executorService == null) {
       throw new NullPointerException("executorService");

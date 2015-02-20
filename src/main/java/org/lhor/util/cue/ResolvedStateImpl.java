@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * The write to resolution is visible to all threads because of the memory-fence
  * behavior of AtomicReference. However, the status check of isResolved(),
  * isFulfilled(), and isRejected() are not blocking and have no guaranteed
- * ordering. During invocation of one of these methods, another thread my be
+ * ordering. During invocation of one of these methods, another thread may be
  * simultaneously setting the resolution state. This is okay, because the status
  * checks will simply return false the same as they would if the resolving thread
  * had to wait for a lock held by the status checking thread.

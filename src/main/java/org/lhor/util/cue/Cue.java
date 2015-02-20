@@ -13,29 +13,8 @@ import java.util.concurrent.Future;
 
 
 /**
- * An implementation of the <a href="https://promisesaplus.com/">Promise/A+</a>
- * specification in Java, and inspired by (and named for)
- * <a href="https://github.com/kriskowal/q/wiki/API-Reference">the Q library</a>.
- * <p>
- * This attempts to be a fairly accurate implementation of the Javascript Promise/A+
- * specification, which facilitates asynchronous work that rejoins when the work is
- * completed. Obviously, not all features can be reproduced or even should be, since
- * there are many differences between the languages.
- * </p>
- * <p>
- * Unlike the Javascript version--which due to the language specification does not
- * have any mechanism of dispatching new threads and parking existing threads--this
- * version executes callbacks in a separate thread pool provided by an
- * ExecutorService. To allow for Exceptions to bubble up instead of being silently
- * caught, it is recommended to end each Promise chain with a call to the blocking
- * method {@link Promise#done()} which will block the current thread until the
- * Promise has been resolved and will throw a {@link RejectedException} if the
- * Promise was rejected.
- * </p>
- * <p>
- * Instances of Cue are served up by Google Guice by including
- * {@link CueModule} in your injector's configuration.
- * </p>
+ * The main interface for the Cue library, producing Deferred/Promise pairs as
+ * well as several ways to produce Promises that Cue itself will resolve.
  * <p>
  * The main method to use from an instance of Cue is {@link Cue#defer()} which
  * will provide a Deferred object that can be resolved in a separate thread managed
@@ -61,6 +40,9 @@ public interface Cue {
    * it will also be rejected with the same reason as the first rejection it
    * finds.
    * </p>
+   * <p>
+   * This method will make use of a thread from the Cue thread pool.
+   * </p>
    *
    * @param promises non-null, possibly empty list of promises in any state
    * @param <T> fulfillment type of all promises
@@ -74,6 +56,9 @@ public interface Cue {
    * <p>
    * If any one of the Futures throws an Exception, the returned Promise will be
    * rejected with the reason being the first Exception found in the List.
+   * </p>
+   * <p>
+   * This method will make use of a thread from the Cue thread pool.
    * </p>
    *
    * @param futures non-null, possibly empty list of futures in any state
@@ -93,6 +78,9 @@ public interface Cue {
 
   /**
    * Produces a Promise which will be resolved when the given Future is resolved.
+   * <p>
+   * This method will make use of a thread from the Cue thread pool.
+   * </p>
    *
    * @param future future to resolve from
    * @param <T> return type of the future, fulfillment type of the promise

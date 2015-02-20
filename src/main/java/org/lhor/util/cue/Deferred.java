@@ -34,15 +34,15 @@ public interface Deferred<T> {
    * It is strongly suggested, but in no way enforced, that the value be
    * immutable or at least treated as immutable. This is because multiple
    * callbacks can be registered on the same Promise:
+   * </p>
    * <pre>
    * // This may print the expected time, epoch, or something entirely
    * // unexpected (because Calendar is not thread-safe), depending on when
    * // clear() takes effect:
    * Promise&lt;Calendar&gt; promise = getTimestamp();
-   * promise.then(time -> time.clear());
-   * promise.then(time -> System.out.println(time));
+   * promise.then(time -&gt; time.clear());
+   * promise.then(time -&gt; System.out.println(time));
    * </pre>
-   * </p>
    *
    * @param t nullable, the value to resolve the Promise with
    */
@@ -67,10 +67,12 @@ public interface Deferred<T> {
    * It is possible to create a circular resolution which will never complete
    * unless a Deferred is resolved in another manner. e.g., the following will
    * never complete:
+   * </p>
    *  <pre>
    *  deferred1.resolveFrom(deferred2.promise());
    *  deferred2.resolveFrom(deferred1.promise());
    *  </pre>
+   * <p>
    * It is possible to cause both to become resolved by later invoking
    * <code>deferred1.resolve(value);</code>, in which case the attempt to
    * resolve from deferred2 will not have any effect.
