@@ -1,12 +1,19 @@
+/*
+ * Copyright (c) 2015, Kevin L'Huillier <klhuillier@gmail.com>
+ *
+ * Released under the zlib license. See LICENSE or
+ * http://spdx.org/licenses/Zlib for the full license text.
+ */
+
 package org.lhor.util.cue;
 
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.Singleton;
 import net.jcip.annotations.Immutable;
 import java.util.concurrent.ExecutorService;
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 
 
 /**
@@ -28,19 +35,20 @@ public final class CueModule extends AbstractModule {
     bind(Cue.class).to(CueImpl.class).in(Singleton.class);
     bind(ExecutorService.class).annotatedWith(CueExecutors.class).toInstance(executorService);
     bind(Deferred.class).toProvider(DeferredProvider.class);
-    bind(EventSink.class).to(EventSinkImpl.class).in(Singleton.class);
+    bind(CallbackRegistry.class).to(CallbackRegistryImpl.class).in(Singleton.class);
   }
 
+  @Immutable
   private static final class DeferredProvider implements Provider<Deferred> {
     private final Provider<Cue> cueProvider;
-    private final Provider<EventSink> eventSinkProvider;
+    private final Provider<CallbackRegistry> registryProvider;
     private final Provider<ResolvedStateImpl> resolvedStateProvider;
 
     @Inject
-    public DeferredProvider(Provider<Cue> cueProvider, Provider<EventSink> eventSinkProvider,
+    public DeferredProvider(Provider<Cue> cueProvider, Provider<CallbackRegistry> registryProvider,
                             Provider<ResolvedStateImpl> resolvedStateProvider) {
       this.cueProvider = cueProvider;
-      this.eventSinkProvider = eventSinkProvider;
+      this.registryProvider = registryProvider;
       this.resolvedStateProvider = resolvedStateProvider;
     }
 
@@ -48,11 +56,11 @@ public final class CueModule extends AbstractModule {
     @SuppressWarnings("unchecked")
     public Deferred get() {
       Cue cue = cueProvider.get();
-      EventSink eventSink = eventSinkProvider.get();
+      CallbackRegistry callbackRegistry = registryProvider.get();
       // Raw types are used because there is no type parameter info available
       ResolvedStateImpl resolvedState = resolvedStateProvider.get();
-      Promise promise = new PromiseImpl<>(cue, eventSink, resolvedState);
-      return new DeferredImpl(eventSink, resolvedState, promise);
+      Promise promise = new PromiseImpl<>(cue, callbackRegistry, resolvedState);
+      return new DeferredImpl(callbackRegistry, resolvedState, promise);
     }
   }
 }

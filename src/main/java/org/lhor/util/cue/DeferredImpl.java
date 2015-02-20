@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2015, Kevin L'Huillier <klhuillier@gmail.com>
+ *
+ * Released under the zlib license. See LICENSE or
+ * http://spdx.org/licenses/Zlib for the full license text.
+ */
+
 package org.lhor.util.cue;
 
 
@@ -6,20 +13,20 @@ import net.jcip.annotations.Immutable;
 
 @Immutable
 final class DeferredImpl<T> implements Deferred<T> {
-  private final EventSink eventSink;
+  private final CallbackRegistry callbackRegistry;
   private final ResolvedStateImpl<T> state;
   private final Promise<T> promise;
 
   // Not auto-injected, the Provider needs to provide the same state to this and the Promise
-  public DeferredImpl(EventSink eventSink, ResolvedStateImpl<T> state, Promise<T> promise) {
-    if (eventSink == null) {
+  public DeferredImpl(CallbackRegistry callbackRegistry, ResolvedStateImpl<T> state, Promise<T> promise) {
+    if (callbackRegistry == null) {
       throw new NullPointerException("eventSink");
     } else if (state == null) {
       throw new NullPointerException("state");
     } else if (promise == null) {
       throw new NullPointerException("promise");
     }
-    this.eventSink = eventSink;
+    this.callbackRegistry = callbackRegistry;
     this.state = state;
     this.promise = promise;
   }
@@ -27,7 +34,7 @@ final class DeferredImpl<T> implements Deferred<T> {
   @Override
   public void resolve(T t) {
     state.offerFulfillment(t);
-    eventSink.stateResolved(state);
+    callbackRegistry.stateResolved(state);
   }
 
   @Override
@@ -49,7 +56,7 @@ final class DeferredImpl<T> implements Deferred<T> {
   @Override
   public void reject(Exception e) {
     state.offerRejection(e);
-    eventSink.stateResolved(state);
+    callbackRegistry.stateResolved(state);
   }
 
   @Override

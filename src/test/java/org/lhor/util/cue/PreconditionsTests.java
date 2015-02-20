@@ -1,11 +1,16 @@
+/*
+ * Copyright (c) 2015, Kevin L'Huillier <klhuillier@gmail.com>
+ *
+ * Released under the zlib license. See LICENSE or
+ * http://spdx.org/licenses/Zlib for the full license text.
+ */
+
 package org.lhor.util.cue;
 
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Provider;
 import org.junit.Test;
-
 import java.util.concurrent.ForkJoinPool;
 
 
@@ -15,7 +20,7 @@ public class PreconditionsTests {
   private final Cue cue = injector.getInstance(Cue.class);
   private final Deferred<Object> deferred = cue.defer();
   private final Promise<Object> promise = deferred.promise();
-  private final EventSink eventSink = injector.getInstance(EventSink.class);
+  private final CallbackRegistry callbackRegistry = injector.getInstance(CallbackRegistry.class);
   private final ResolvedStateImpl<Object> resolvedState = new ResolvedStateImpl<>();
 
   @Test(expected = NullPointerException.class)
@@ -55,12 +60,12 @@ public class PreconditionsTests {
 
   @Test(expected = NullPointerException.class)
   public void testDeferredImplStateNpe() {
-    new DeferredImpl<>(eventSink, null, promise);
+    new DeferredImpl<>(callbackRegistry, null, promise);
   }
 
   @Test(expected = NullPointerException.class)
   public void testDeferredImplPromiseNpe() {
-    new DeferredImpl<>(eventSink, resolvedState, null);
+    new DeferredImpl<>(callbackRegistry, resolvedState, null);
   }
 
   @Test(expected = NullPointerException.class)
@@ -68,29 +73,35 @@ public class PreconditionsTests {
     deferred.resolveFrom(null);
   }
 
+  @Test(expected = IllegalArgumentException.class)
+  public void testDeferredImplResolveFromOwnPromiseIae() {
+    Deferred<String> deferred = cue.defer();
+    deferred.resolveFrom(deferred.promise());
+  }
+
   @Test(expected = NullPointerException.class)
   public void testEventSinkExecutorsNpe() {
-    new EventSinkImpl(null);
+    new CallbackRegistryImpl(null);
   }
 
   @Test(expected = NullPointerException.class)
   public void testEventSinkRegisterStateNpe() {
-    eventSink.register(null, () -> {});
+    callbackRegistry.register(null, () -> {});
   }
 
   @Test(expected = NullPointerException.class)
   public void testEventSinkRegisterCallbackNpe() {
-    eventSink.register(resolvedState, null);
+    callbackRegistry.register(resolvedState, null);
   }
 
   @Test(expected = NullPointerException.class)
   public void testEventSinkResolvedNpe() {
-    eventSink.stateResolved(null);
+    callbackRegistry.stateResolved(null);
   }
 
   @Test(expected = NullPointerException.class)
   public void testPromiseImplCueNpe() {
-    new PromiseImpl<>(null, eventSink, resolvedState);
+    new PromiseImpl<>(null, callbackRegistry, resolvedState);
   }
 
   @Test(expected = NullPointerException.class)
@@ -100,7 +111,7 @@ public class PreconditionsTests {
 
   @Test(expected = NullPointerException.class)
   public void testPromiseImplStateNpe() {
-    new PromiseImpl<>(cue, eventSink, null);
+    new PromiseImpl<>(cue, callbackRegistry, null);
   }
 
   @Test(expected = NullPointerException.class)
@@ -136,5 +147,10 @@ public class PreconditionsTests {
   @Test(expected = NullPointerException.class)
   public void testPromiseImplAlwaysCallbackNpe() {
     promise.always(null);
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void testCueFactoryNpe() {
+    new CueFactory(null);
   }
 }

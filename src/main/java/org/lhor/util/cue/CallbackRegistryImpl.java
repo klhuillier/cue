@@ -1,22 +1,32 @@
+/*
+ * Copyright (c) 2015, Kevin L'Huillier <klhuillier@gmail.com>
+ *
+ * Released under the zlib license. See LICENSE or
+ * http://spdx.org/licenses/Zlib for the full license text.
+ */
+
 package org.lhor.util.cue;
 
 
-import com.google.inject.Inject;
+import net.jcip.annotations.GuardedBy;
 import net.jcip.annotations.ThreadSafe;
 import java.util.ArrayList;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
+import javax.inject.Inject;
 
 
 @ThreadSafe
-final class EventSinkImpl implements EventSink {
+final class CallbackRegistryImpl implements CallbackRegistry {
   /** Thread pool to run the ready runnables in */
   private final ExecutorService executorService;
 
   /** Maps states to a list of runnables waiting to execute whenever the state is resolved */
+  @GuardedBy("lock")
   private final WeakHashMap<ResolvedState<?>, ArrayList<Runnable>> invokers = new WeakHashMap<>();
   /** A list of states that are known to have been resolved already */
+  @GuardedBy("lock")
   private final WeakHashMap<ResolvedState<?>, Object> resolved = new WeakHashMap<>();
   /** A queue of runnables whose states are resolved and could be run immediately */
   private final ConcurrentLinkedQueue<Runnable> ready = new ConcurrentLinkedQueue<>();
@@ -25,7 +35,7 @@ final class EventSinkImpl implements EventSink {
   private final Object lock = new Object();
 
   @Inject
-  public EventSinkImpl(@CueExecutors ExecutorService executorService) {
+  public CallbackRegistryImpl(@CueExecutors ExecutorService executorService) {
     if (executorService == null) {
       throw new NullPointerException("executorService");
     }

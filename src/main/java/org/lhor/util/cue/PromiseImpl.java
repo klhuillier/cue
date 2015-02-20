@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2015, Kevin L'Huillier <klhuillier@gmail.com>
+ *
+ * Released under the zlib license. See LICENSE or
+ * http://spdx.org/licenses/Zlib for the full license text.
+ */
+
 package org.lhor.util.cue;
 
 
@@ -9,20 +16,20 @@ import java.util.logging.Logger;
 @Immutable
 final class PromiseImpl<T> implements Promise<T> {
   private final Cue cue;
-  private final EventSink eventSink;
+  private final CallbackRegistry callbackRegistry;
   private final ResolvedState<T> state;
   private final Logger log = Logger.getLogger(PromiseImpl.class.getName());
 
-  public PromiseImpl(Cue cue, EventSink eventSink, ResolvedState<T> state) {
+  public PromiseImpl(Cue cue, CallbackRegistry callbackRegistry, ResolvedState<T> state) {
     if (cue == null) {
       throw new NullPointerException("cue");
-    } else if (eventSink == null) {
+    } else if (callbackRegistry == null) {
       throw new NullPointerException("eventSink");
     } else if (state == null) {
       throw new NullPointerException("state");
     }
     this.cue = cue;
-    this.eventSink = eventSink;
+    this.callbackRegistry = callbackRegistry;
     this.state = state;
   }
 
@@ -33,7 +40,7 @@ final class PromiseImpl<T> implements Promise<T> {
     }
 
     Deferred<O> deferred = cue.defer();
-    eventSink.register(state, () -> {
+    callbackRegistry.register(state, () -> {
       T tValue;
       try {
         tValue = state.get();
@@ -62,7 +69,7 @@ final class PromiseImpl<T> implements Promise<T> {
     }
 
     Deferred<T> deferred = cue.defer();
-    eventSink.register(state, () -> {
+    callbackRegistry.register(state, () -> {
       T tValue;
       try {
         tValue = state.get();
@@ -91,7 +98,7 @@ final class PromiseImpl<T> implements Promise<T> {
     }
 
     Deferred<O> deferred = cue.defer();
-    eventSink.register(state, () -> {
+    callbackRegistry.register(state, () -> {
       T tValue;
       try {
         tValue = state.get();
@@ -120,7 +127,7 @@ final class PromiseImpl<T> implements Promise<T> {
     }
 
     Deferred<T> deferred = cue.defer();
-    eventSink.register(state, () -> {
+    callbackRegistry.register(state, () -> {
       T tValue;
       try {
         tValue = state.get();
@@ -149,7 +156,7 @@ final class PromiseImpl<T> implements Promise<T> {
     }
 
     Deferred<T> deferred = cue.defer();
-    eventSink.register(state, () -> {
+    callbackRegistry.register(state, () -> {
       try {
         T value = state.getValue();
         if (state.isFulfilled()) {
@@ -184,7 +191,7 @@ final class PromiseImpl<T> implements Promise<T> {
     }
 
     Deferred<T> deferred = cue.defer();
-    eventSink.register(state, () -> {
+    callbackRegistry.register(state, () -> {
       try {
         T value = state.getValue();
         if (state.isFulfilled()) {
@@ -219,7 +226,7 @@ final class PromiseImpl<T> implements Promise<T> {
     }
 
     Deferred<T> deferred = cue.defer();
-    eventSink.register(state, () -> {
+    callbackRegistry.register(state, () -> {
       boolean interrupted = false;
       try {
         state.getValue();

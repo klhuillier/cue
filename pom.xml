@@ -8,6 +8,23 @@
   <artifactId>cue</artifactId>
   <version>1.0</version>
 
+  <licenses>
+    <license>
+      <name>zlib license</name>
+      <url>http://spdx.org/licenses/Zlib</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Kevin L'Huillier</name>
+      <email>klhuillier@gmail.com</email>
+      <url>https://github.com/klhuillier/</url>
+      <timezone>America/New_York</timezone>
+    </developer>
+  </developers>
+
   <build>
     <plugins>
       <plugin>
@@ -44,11 +61,17 @@
       <groupId>net.jcip</groupId>
       <artifactId>jcip-annotations</artifactId>
       <version>1.0</version>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>
       <version>4.0-beta5</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
+      <version>1</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

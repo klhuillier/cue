@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2015, Kevin L'Huillier <klhuillier@gmail.com>
+ *
+ * Released under the zlib license. See LICENSE or
+ * http://spdx.org/licenses/Zlib for the full license text.
+ */
+
 package org.lhor.util.cue;
 
 
@@ -366,14 +373,14 @@ public class CueImplTest {
 
   @Test
   public void testCallbackInterrupted() {
-    MockEventSink eventSink = new MockEventSink();
-    PromiseImpl<String> promise = new PromiseImpl<>(cue, eventSink, new InterruptedResolvedState<>());
+    MockCallbackRegistry registry = new MockCallbackRegistry();
+    PromiseImpl<String> promise = new PromiseImpl<>(cue, registry, new InterruptedResolvedState<>());
     AtomicBoolean called = new AtomicBoolean(false);
     Promise<String> result = promise.then(s -> {
       called.set(true);
       return s;
     });
-    eventSink.drainRunnables().forEach(r -> r.run());
+    registry.drainRunnables().forEach(r -> r.run());
     try {
       result.done();
       Assert.fail();
@@ -385,14 +392,14 @@ public class CueImplTest {
 
   @Test
   public void testNullCallbackInterrupted() {
-    MockEventSink eventSink = new MockEventSink();
-    PromiseImpl<String> promise = new PromiseImpl<>(cue, eventSink, new InterruptedResolvedState<>());
+    MockCallbackRegistry registry = new MockCallbackRegistry();
+    PromiseImpl<String> promise = new PromiseImpl<>(cue, registry, new InterruptedResolvedState<>());
     AtomicBoolean called = new AtomicBoolean(false);
     Promise<String> result = promise.then(() -> {
       called.set(true);
       return "";
     });
-    eventSink.drainRunnables().forEach(r -> r.run());
+    registry.drainRunnables().forEach(r -> r.run());
     try {
       result.done();
       Assert.fail();
@@ -404,13 +411,13 @@ public class CueImplTest {
 
   @Test
   public void testVoidCallbackInterrupted() {
-    MockEventSink eventSink = new MockEventSink();
-    PromiseImpl<String> promise = new PromiseImpl<>(cue, eventSink, new InterruptedResolvedState<>());
+    MockCallbackRegistry registry = new MockCallbackRegistry();
+    PromiseImpl<String> promise = new PromiseImpl<>(cue, registry, new InterruptedResolvedState<>());
     AtomicBoolean called = new AtomicBoolean(false);
     Promise<String> result = promise.then(s -> {
       called.set(true);
     });
-    eventSink.drainRunnables().forEach(r -> r.run());
+    registry.drainRunnables().forEach(r -> r.run());
     try {
       result.done();
       Assert.fail();
@@ -422,13 +429,13 @@ public class CueImplTest {
 
   @Test
   public void testNullVoidCallbackInterrupted() {
-    MockEventSink eventSink = new MockEventSink();
-    PromiseImpl<String> promise = new PromiseImpl<>(cue, eventSink, new InterruptedResolvedState<>());
+    MockCallbackRegistry registry = new MockCallbackRegistry();
+    PromiseImpl<String> promise = new PromiseImpl<>(cue, registry, new InterruptedResolvedState<>());
     AtomicBoolean called = new AtomicBoolean(false);
     Promise<String> result = promise.then(() -> {
       called.set(true);
     });
-    eventSink.drainRunnables().forEach(r -> r.run());
+    registry.drainRunnables().forEach(r -> r.run());
     try {
       result.done();
       Assert.fail();
@@ -440,14 +447,14 @@ public class CueImplTest {
 
   @Test
   public void testErrbackInterrupted() {
-    MockEventSink eventSink = new MockEventSink();
-    PromiseImpl<String> promise = new PromiseImpl<>(cue, eventSink, new InterruptedResolvedState<>());
+    MockCallbackRegistry registry = new MockCallbackRegistry();
+    PromiseImpl<String> promise = new PromiseImpl<>(cue, registry, new InterruptedResolvedState<>());
     AtomicBoolean called = new AtomicBoolean(false);
     Promise<String> result = promise.fail(ex -> {
       called.set(true);
       return "";
     });
-    eventSink.drainRunnables().forEach(r -> r.run());
+    registry.drainRunnables().forEach(r -> r.run());
     try {
       result.done();
       Assert.fail();
@@ -459,13 +466,13 @@ public class CueImplTest {
 
   @Test
   public void testVoidErrbackInterrupted() {
-    MockEventSink eventSink = new MockEventSink();
-    PromiseImpl<String> promise = new PromiseImpl<>(cue, eventSink, new InterruptedResolvedState<>());
+    MockCallbackRegistry registry = new MockCallbackRegistry();
+    PromiseImpl<String> promise = new PromiseImpl<>(cue, registry, new InterruptedResolvedState<>());
     AtomicBoolean called = new AtomicBoolean(false);
     Promise<String> result = promise.fail(ex -> {
       called.set(true);
     });
-    eventSink.drainRunnables().forEach(r -> r.run());
+    registry.drainRunnables().forEach(r -> r.run());
     try {
       result.done();
       Assert.fail();
@@ -477,13 +484,13 @@ public class CueImplTest {
 
   @Test
   public void testAlwaysCallbackInterrupted() {
-    MockEventSink eventSink = new MockEventSink();
-    PromiseImpl<String> promise = new PromiseImpl<>(cue, eventSink, new InterruptedResolvedState<>());
+    MockCallbackRegistry registry = new MockCallbackRegistry();
+    PromiseImpl<String> promise = new PromiseImpl<>(cue, registry, new InterruptedResolvedState<>());
     AtomicBoolean called = new AtomicBoolean(false);
     Promise<String> result = promise.always(() -> {
       called.set(true);
     });
-    eventSink.drainRunnables().forEach(r -> r.run());
+    registry.drainRunnables().forEach(r -> r.run());
     try {
       result.done();
       Assert.fail();
@@ -491,12 +498,6 @@ public class CueImplTest {
       Assert.assertTrue(called.get());
       Assert.assertTrue(e.getReason() instanceof InterruptedException);
     }
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testResolveFromOwnPromise() {
-    Deferred<String> deferred = cue.defer();
-    deferred.resolveFrom(deferred.promise());
   }
 
   @Test

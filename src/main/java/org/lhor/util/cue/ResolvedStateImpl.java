@@ -1,6 +1,14 @@
+/*
+ * Copyright (c) 2015, Kevin L'Huillier <klhuillier@gmail.com>
+ *
+ * Released under the zlib license. See LICENSE or
+ * http://spdx.org/licenses/Zlib for the full license text.
+ */
+
 package org.lhor.util.cue;
 
 
+import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -49,6 +57,7 @@ final class ResolvedStateImpl<T> implements ResolvedState<T> {
    *
    * @param <T> fulfillment type
    */
+  @Immutable
   private static final class FulfilledResolution<T> implements Resolution<T> {
     private final T value;
 
@@ -74,6 +83,7 @@ final class ResolvedStateImpl<T> implements ResolvedState<T> {
    *
    * @param <T> fulfillment type
    */
+  @Immutable
   private static final class RejectedResolution<T> implements Resolution<T> {
     private final Exception reason;
 

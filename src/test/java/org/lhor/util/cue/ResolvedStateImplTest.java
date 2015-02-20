@@ -1,9 +1,15 @@
+/*
+ * Copyright (c) 2015, Kevin L'Huillier <klhuillier@gmail.com>
+ *
+ * Released under the zlib license. See LICENSE or
+ * http://spdx.org/licenses/Zlib for the full license text.
+ */
+
 package org.lhor.util.cue;
 
 
 import org.junit.Assert;
 import org.junit.Test;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ForkJoinPool;
 

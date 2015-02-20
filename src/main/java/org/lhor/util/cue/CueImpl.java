@@ -1,14 +1,21 @@
+/*
+ * Copyright (c) 2015, Kevin L'Huillier <klhuillier@gmail.com>
+ *
+ * Released under the zlib license. See LICENSE or
+ * http://spdx.org/licenses/Zlib for the full license text.
+ */
+
 package org.lhor.util.cue;
 
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
 import net.jcip.annotations.Immutable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 
 @Immutable
