@@ -62,7 +62,7 @@ getUserAsync(credentials)
 .done();
 ```
 
-A consumer may wish to make use of the Cue instance to group Promises together. If it has produced a large list of Promise chains, they can all be treated as a single Promise with `cue.all(List<Promise<T>>)`. This will produce a Promise<List<T>> containing a list of all Promises' values in the same order. Calling `done` on the aggregated Promise will wait for every Promise in the list to complete.
+A consumer may wish to make use of the Cue instance to group Promises together. If it has produced a large list of Promise chains, they can all be treated as a single Promise with `cue.all(List<Promise<T>>)`. This will produce a `Promise<List<T>>` containing a list of all Promises' values in the same order. Calling `done` on the aggregated Promise will wait for every Promise in the list to complete.
 
 # The Cue interface
 
