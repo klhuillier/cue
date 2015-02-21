@@ -1,4 +1,4 @@
-# cue
+# Cue
 
 Cue is a Java 8 library for asynchronous work, providing an interface for a producer and allowing consumers to register callback chains.
 
@@ -13,19 +13,19 @@ Cue is made with as few runtime dependencies as possible. You will need:
 
 # Getting Started
 
-Once you have it included in your project, there are two ways to start using it. Both will require you to provide a thread pool, some form of [ExecutorService](http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ExecutorService.html). Using Guice, add `new CueModule(executorService)` to your Injector's list of modules. Without Guice, you can create a new `Provider<Cue>` with `new CueFactory(executorService)` or simply get the instance from `cueFactory.get()`.
+Once you have it included in your project, there are two ways to start using it. Both will require you to provide a thread pool, some form of [ExecutorService](http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ExecutorService.html). Using Guice, add `new CueModule(executorService)` to your Injector's list of modules. Without Guice, you can create a new `Provider<Cue>` with `new CueFactory(executorService)`.
 
-Once you have a `Cue` instance, you can begin by invoking `Cue.defer()` to create a `Deferred<T>`. A producer will fulfill or reject this `Deferred<T>`. The consumer will be interested in the `Promise<T>` associated with the `Deferred<T>` which can be retrieved with `deferred.promise()`.
+Once you have a Cue instance, you can begin by invoking `cue.defer()` to create a Deferred<T>. A producer will fulfill or reject this Deferred<T>. The consumer will be interested in the Promise<T> associated with the Deferred<T> which can be retrieved with `deferred.promise()`.
 
 # Producers
 
-Producers are the thread(s) which are generating values for their consumers to work with. The main interface for a producer is Deferred<T> which can be fulfilled with an object of type T. Note that consumer threads will remain in waiting until the Deferred has been resolved (either fulfilled or rejected), so most producers should have a catch block in case there was a problem producing the value: `catch (Exception e) { deferred.reject(e); }`
+Producers are the thread(s) which generate values for their consumers to work with. The main interface for a producer is Deferred<T> which can be fulfilled with an object of type T.
 
-The thread creating the Deferred<T> can hand off a Promise<T> to a consumer thread. The Promise<T> interface is entirely passive and simply awaits for a value to become available. The associated Promise<T> is returned from `deferred.promise()`. All Promise<T> instances produced from the same Deferred<T> will have identical behavior (and are likely to be the same instance, but this is not guaranteed) and once the Deferred<T> is resolved, all Promise<T> instances will have exactly the same resolved state. (Either the identical value object or the identical exception.)
+Consumer threads will remain in waiting until the Deferred has been resolved (either fulfilled or rejected), so most producers should have a catch block in case there was a problem producing the value: `catch (Exception e) { deferred.reject(e); }` It is generally not advised to catch all Throwable types because Errors tend to be thrown during irrecoverable and unpredictable states. (The reject method only allows Throwables of type Exception for this reason.)
 
-Occasionally you may find you have a value already prepared, perhaps it was cached, but the consumer still expects the value to be provided at some point in the future. `Cue.when(T)` will produce a `Promise<T>` that is immediately resolved with the given value.
+To ensure even Errors will unblock the consumers, you can add an additional finally block: `catch (Exception e) { deferred.reject(e); } finally { deferred.reject(); }`. If the deferred is resolved or rejected with a regular Exception, the finally block's code will have no effect because a resolved Promise's state can not be altered.
 
-You may also wish to adapt from an interface that provides a `Future<T>` and use it with an interface that expects a `Promise<T>`. The method `Cue.whenFuture(Future<T>)` will produce a `Promise<T>` that will become resolved when a value is available. (Note that this will park a thread in the thread pool until `future.get()` returns. You may wish to use a separate instance of Cue with its own thread pool for adapting Futures to Promises.)
+However, in the event of an Error, it is probably better to allow it to terminate the application, and your application's cleanup should shutdown all the threads in the thread pool, possibly with a call to `executorService.shutdownNow()` if the threads are not daemon threads. (ForkJoinPool uses daemon threads, but pools created from Executors use user threads by default.)
 
 # Consumers
 
@@ -56,4 +56,24 @@ Promise<Cart> promise = asyncGetUser(userId)
 .done();
 ```
 
-A consumer may wish to make use of the `Cue` instance to group Promises together. If it has produced a large list of Promise chains, they can all be treated as a single Promise with `Cue.all(List<Promise<T>>)`. This will produce a `Promise<List<T>>` containing a list of all Promises' values in the same order. Calling `done` on the aggregated Promise will wait for every Promise in the list to complete.
+A consumer may wish to make use of the Cue instance to group Promises together. If it has produced a large list of Promise chains, they can all be treated as a single Promise with `cue.all(List<Promise<T>>)`. This will produce a Promise<List<T>> containing a list of all Promises' values in the same order. Calling `done` on the aggregated Promise will wait for every Promise in the list to complete.
+
+# The Cue interface
+
+The thread creating the Deferred<T> can hand off a Promise<T> to a consumer thread. The Promise<T> interface is entirely passive and simply awaits for a value to become available. The associated Promise<T> is returned from `deferred.promise()`. All Promise<T> instances produced from the same Deferred<T> will have identical behavior (and are likely to be the same instance, but this is not guaranteed) and once the Deferred<T> is resolved, all Promise<T> instances will have exactly the same resolved state. (Either the identical value object or the identical exception.)
+
+Occasionally you may find you have a value already prepared, perhaps it was cached, but the consumer still expects the value to be provided at some point in the future. `cue.when(T)` will produce a Promise<T> that is immediately resolved with the given value.
+
+You may also wish to adapt from an interface that provides a Future<T> and use it with an interface that expects a Promise<T>. The method `cue.whenFuture(Future<T>)` will produce a Promise<T> that will become resolved when a value is available. Note that this will use a thread in the thread pool until `future.get()` returns. You may wish to avoid this if your common thread pool has a low number of maximum threads. Either create a separate instance of Cue with `new CueFactory(futuresThreadPool).get()` or start up a thread outside the pool:
+
+```
+Deferred<T> deferred = cue.defer();
+new Thread(() -> {
+  try {
+    deferred.resolve(future.get());
+  } catch (Exception e) {
+    deferred.reject(e);
+  }
+}).start();
+return deferred.promise();
+```
