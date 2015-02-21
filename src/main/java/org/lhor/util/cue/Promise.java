@@ -212,7 +212,7 @@ public interface Promise<T> {
    * @return a Promise which will be resolved after the callback is completed
    *   containing exactly the same resolved state as the current Promise
    */
-  Promise<T> always(NullVoidCallback callback);
+  Promise<T> always(Runnable callback);
 
   /**
    * Ends a Promise chain and returns the final value or throws a

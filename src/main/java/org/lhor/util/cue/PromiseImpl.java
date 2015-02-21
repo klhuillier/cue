@@ -220,7 +220,7 @@ final class PromiseImpl<T> implements Promise<T> {
   }
 
   @Override
-  public Promise<T> always(NullVoidCallback callback) {
+  public Promise<T> always(Runnable callback) {
     if (callback == null) {
       throw new NullPointerException("callback");
     }
@@ -236,7 +236,7 @@ final class PromiseImpl<T> implements Promise<T> {
 
       try {
         log.fine("Promise resolved, invoking always callback");
-        callback.call();
+        callback.run();
       } catch (Exception e) {
         // This is generally a problem. Always callbacks should generally not throw.
         log.log(Level.WARNING, "Always callback threw an exception", e);
