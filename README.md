@@ -53,7 +53,7 @@ Only the `done` method rethrows an Exception, but all of the `then` and `fail` m
 
 A simple example of a Promise chain in code:
 
-```
+```java
 getUserAsync(credentials)
 .then(user -> { mainPageCtrl.setUser(user); return user; })
 .then(() -> mainPageCtrl.showWelcomeMessage())
@@ -72,7 +72,7 @@ Occasionally you may find you have a value already prepared--perhaps it was cach
 
 You may also wish to adapt from an interface that provides a Future<T> and use it with an interface that expects a Promise<T>. The method `cue.whenFuture(Future<T>)` will produce a Promise<T> that will become resolved when a value is available. Note that this will use a thread in the Cue's thread pool until `future.get()` returns. You may wish to avoid this if the thread pool has a low number of maximum threads. Either create a separate instance of Cue with `new CueFactory(futuresThreadPool).get()` or start up a thread outside the pool:
 
-```
+```java
 Deferred<T> deferred = cue.defer();
 new Thread(() -> {
   try {
