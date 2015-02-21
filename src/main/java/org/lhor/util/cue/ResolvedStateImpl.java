@@ -51,9 +51,8 @@ final class ResolvedStateImpl<T> implements ResolvedState<T> {
   }
 
   /**
-   * A simple holder for the resolved state. It will have either null in
-   * reason for a fulfilled resolution (value may also be null in this case),
-   * or an object reference in reason for rejections.
+   * A simple holder for the resolved state of a fulfilled Promise, the value
+   * of which may be null.
    *
    * @param <T> fulfillment type
    */
@@ -77,11 +76,11 @@ final class ResolvedStateImpl<T> implements ResolvedState<T> {
   }
 
   /**
-   * A simple holder for the resolved state. It will have either null in
-   * reason for a fulfilled resolution (value may also be null in this case),
-   * or an object reference in reason for rejections.
+   * A simple holder for the resolved state of a rejected Promise, the value
+   * of which must be an Exception and may be a RejectedException with no
+   * reason.
    *
-   * @param <T> fulfillment type
+   * @param <T> fulfillment type (which will not be available due to rejection)
    */
   @Immutable
   private static final class RejectedResolution<T> implements Resolution<T> {

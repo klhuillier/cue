@@ -11,13 +11,8 @@ package org.lhor.util.cue;
 /**
  * The producer's interface to the Promises/A+ API.
  * <p>
- * The producer is able to return a Promise of a value at a later time.
- * </p>
- * <p>
- * Unlike the Promises/A+ API, in Java there can be multiple threads waiting
- * on a Promise to be resolved. To cancel the operation and un-park any
- * threads waiting on this Deferred's Promise to be resolved, simply invoke
- * {@link #reject()}.
+ * The producer is able to return a Promise of a value to become available
+ * at a later time.
  * </p>
  *
  * @param <T> the value type the Deferred and its immediate Promise will be

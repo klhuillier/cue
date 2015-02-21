@@ -54,7 +54,7 @@ interface ResolvedState<T> {
   boolean isFulfilled();
 
   /**
-   * @return true if the state was rejected and there is a reason
+   * @return true if the state was rejected
    */
   boolean isRejected();
 
